@@ -27,6 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.api.auth import router as auth_router
+from app.api.payroll import router as payroll_router
+
+app.include_router(auth_router)
+app.include_router(payroll_router)
+
 @app.get("/api/health")
 async def health_check():
     """

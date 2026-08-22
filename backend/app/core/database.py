@@ -2,11 +2,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 
-# Configure engine with pre-ping enabled to check connection health before executing operations
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True
-)
+# Configure engine depending on database type (SQLite vs PostgreSQL)
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        settings.DATABASE_URL,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

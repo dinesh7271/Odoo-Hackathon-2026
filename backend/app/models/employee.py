@@ -19,6 +19,9 @@ class Employee(Base):
 
     # Establish reverse relationship to User
     user = relationship("User", back_populates="employee")
+    
+    # Establish one-to-one relationship to Payroll
+    payroll = relationship("Payroll", back_populates="employee", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Employee {self.name} (ID: {self.employee_id})>"

@@ -6,8 +6,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     
     # Database
-    # Fallback to postgresql on localhost if environment variable is not defined
-    DATABASE_URL: str = "postgresql://postgres:postgrespassword@localhost:5432/dayflow"
+    # Fallback to sqlite locally if DATABASE_URL is not set in the environment
+    DATABASE_URL: str = "sqlite:///./dayflow.db"
     
     # JWT Settings (Placeholder for future authentication steps)
     SECRET_KEY: str = "secret-key-to-be-replaced-in-production"
