@@ -19,6 +19,8 @@ class Employee(Base):
 
     # Establish reverse relationship to User
     user = relationship("User", back_populates="employee")
+    # Establish relationship to LeaveRequest
+    leaves = relationship("LeaveRequest", back_populates="employee", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Employee {self.name} (ID: {self.employee_id})>"
