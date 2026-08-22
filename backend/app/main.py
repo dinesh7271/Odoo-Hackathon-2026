@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
 from app.models import Base
+from app.api.auth import router as auth_router
+from app.api.employees import router as employees_router
+from app.api.attendance import router as attendance_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,7 +16,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Dayflow HRM API",
-    description="Backend API for Dayflow Human Resource Management System",
+    description="Backend API for Dayflow Human Resource Management System - Profile & Attendance Management",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -27,6 +30,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register API routers
+app.include_router(auth_router)
+app.include_router(employees_router)
+app.include_router(attendance_router)
+
 @app.get("/api/health")
 async def health_check():
     """
@@ -34,9 +42,11 @@ async def health_check():
     """
     return {
         "status": "ok",
-        "service": "Dayflow Backend API"
+        "service": "Dayflow Backend API",
+        "modules": ["employees", "attendance", "auth"]
     }
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+

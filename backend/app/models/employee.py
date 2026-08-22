@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -16,9 +16,12 @@ class Employee(Base):
     department = Column(String, nullable=True)
     salary = Column(Float, nullable=True)
     profile_picture = Column(String, nullable=True)
+    documents = Column(Text, nullable=True)  # JSON-encoded array of document metadata
 
     # Establish reverse relationship to User
     user = relationship("User", back_populates="employee")
+    # Establish one-to-many relationship to Attendance
+    attendances = relationship("Attendance", back_populates="employee", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Employee {self.name} (ID: {self.employee_id})>"

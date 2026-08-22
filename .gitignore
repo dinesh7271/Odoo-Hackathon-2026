@@ -60,3 +60,6 @@ cypress/videos/
 .DS_Store
 Thumbs.db
 db.sqlite3
+*.db
+.pytest_cache/
+
