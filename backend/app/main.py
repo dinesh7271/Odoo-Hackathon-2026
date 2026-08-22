@@ -1,10 +1,21 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import engine
+from app.models import Base
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup.
+    # Safe to call multiple times as it only creates tables if they don't exist.
+    Base.metadata.create_all(bind=engine)
+    yield
 
 app = FastAPI(
     title="Dayflow HRM API",
     description="Backend API for Dayflow Human Resource Management System",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Enable CORS for frontend integration

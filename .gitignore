@@ -23,6 +23,7 @@ share/python-wheels/
 MANIFEST
 .venv
 venv/
+backend/venv/
 ENV/
 env/
 ENV/local/
