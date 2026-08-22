@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
 from app.models import Base
-from app.api import auth, dashboard
+from app.api import auth, employees, attendance, leaves, payroll, dashboard
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,10 +19,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Include API routers
-app.include_router(auth.router)
-app.include_router(dashboard.router)
-
 # Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +27,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(auth.router)
+app.include_router(employees.router)
+app.include_router(attendance.router)
+app.include_router(leaves.router)
+app.include_router(payroll.router)
+app.include_router(dashboard.router)
 
 @app.get("/api/health")
 async def health_check():

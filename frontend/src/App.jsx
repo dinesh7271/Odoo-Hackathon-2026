@@ -1,106 +1,128 @@
 import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './components/Login';
-import Register from './components/Register';
-import EmployeeDashboard from './components/EmployeeDashboard';
-import HRDashboard from './components/HRDashboard';
+import { AuthProvider, useAuth, DEMO_ACCOUNTS } from './context/AuthContext';
+import { ToastProvider } from './components/common/Toast';
 
-function AppContent() {
-  const { user, loading, API_BASE } = useAuth();
-  const [activeView, setActiveView] = useState('login'); // 'login' | 'register'
-  const [backendStatus, setBackendStatus] = useState('loading'); // 'loading' | 'online' | 'offline'
+// Layout
+import { Navbar } from './components/layout/Navbar';
+import { Sidebar } from './components/layout/Sidebar';
 
-  // Query backend health check to verify backend is reachable
+// Auth / Login
+import { AuthModal } from './components/AuthModal';
+
+// Profile & Directory
+import { EmployeeProfileView } from './components/profile/EmployeeProfileView';
+import { HREmployeeDirectory } from './components/profile/HREmployeeDirectory';
+
+// Attendance
+import { EmployeeAttendance } from './components/attendance/EmployeeAttendance';
+import { HRAttendanceDashboard } from './components/attendance/HRAttendanceDashboard';
+
+// Leave Management
+import { EmployeeLeaveView } from './components/EmployeeLeaveView';
+import { HRLeaveView } from './components/HRLeaveView';
+
+// Payroll
+import { EmployeePayrollView } from './components/payroll/EmployeePayrollView';
+import { HRPayrollView } from './components/payroll/HRPayrollView';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+function MainLayout() {
+  const { user, employee, isHR, isLoading, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState(() => isHR ? 'dashboard' : 'dashboard');
+  const [apiStatus, setApiStatus] = useState('checking');
+
+  // Check backend health
   useEffect(() => {
-    const checkHealth = async () => {
+    const check = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/health`);
-        if (response.ok) {
-          setBackendStatus('online');
-        } else {
-          setBackendStatus('offline');
-        }
-      } catch (err) {
-        setBackendStatus('offline');
+        const res = await fetch(`${API_URL}/api/health`);
+        setApiStatus(res.ok ? 'online' : 'offline');
+      } catch {
+        setApiStatus('offline');
       }
     };
-    checkHealth();
-    // Run health check every 10 seconds to keep connection status active
-    const interval = setInterval(checkHealth, 10000);
+    check();
+    const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
-  }, [API_BASE]);
+  }, []);
 
-  if (loading) {
+  // Reset to default tab when role changes
+  useEffect(() => {
+    setActiveTab('dashboard');
+  }, [isHR]);
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center relative font-sans">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-        <span className="text-xs font-mono mt-4 text-slate-500 uppercase tracking-widest">Resolving Dayflow Profile...</span>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-200">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+            <span className="text-white font-black text-2xl">D</span>
+          </div>
+          <p className="text-sm font-semibold text-slate-400">Authenticating Dayflow HRMS...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-hidden relative font-sans">
-      {/* Decorative ambient blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative selection:bg-indigo-500 selection:text-white">
+      {/* Ambient background glows */}
+      <div className="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[140px] pointer-events-none" />
 
-      {/* App Header */}
-      <header className="border-b border-slate-900 backdrop-blur-md bg-slate-950/50 sticky top-0 z-50 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span className="text-white font-black text-xl">D</span>
+      {/* Navbar */}
+      {isAuthenticated && <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />}
+
+      {/* Main content */}
+      {!isAuthenticated ? (
+        /* ── Logged-out: show auth modal ── */
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="text-center max-w-xl mb-10">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
+              <span>Hackathon 2026</span><span>•</span><span>Dayflow HRMS</span>
             </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Dayflow</span>
-              <span className="text-[10px] block font-mono text-slate-500 uppercase tracking-widest leading-none mt-0.5">HRM System</span>
-            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-400 tracking-tight">
+              Dayflow HRMS
+            </h1>
+            <p className="text-sm text-slate-400 mt-3">
+              Full-stack HR Management System — attendance, leaves, payroll & more.
+            </p>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* Live Backend Connection Indicator */}
-            <div className="flex items-center space-x-2 bg-slate-900/60 border border-slate-800/80 px-3.5 py-1.5 rounded-full text-xs">
-              <span className="relative flex h-2 w-2">
-                {backendStatus === 'loading' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
-                {backendStatus === 'online' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-                {backendStatus === 'offline' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  backendStatus === 'loading' ? 'bg-amber-500' :
-                  backendStatus === 'online' ? 'bg-emerald-500' : 'bg-rose-500'
-                }`}></span>
-              </span>
-              <span className="text-slate-400 text-[10px] font-mono font-semibold uppercase tracking-wider">
-                Backend: {backendStatus}
-              </span>
-            </div>
-          </div>
+          <AuthModal />
         </div>
-      </header>
+      ) : (
+        /* ── Logged-in: sidebar + main content ── */
+        <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6 relative z-10">
+          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <main className="flex-1 min-w-0">
+            {/* EMPLOYEE TABS */}
+            {activeTab === 'dashboard'     && !isHR && <EmployeeDashboardSummary />}
+            {activeTab === 'profile'       && <EmployeeProfileView />}
+            {activeTab === 'attendance'    && <EmployeeAttendance />}
+            {activeTab === 'leaves'        && <EmployeeLeaveView />}
+            {activeTab === 'payroll'       && !isHR && <EmployeePayrollView />}
 
-      {/* Main Content Workspace */}
-      <main className="flex-grow flex items-center justify-center p-6 z-10">
-        {!user ? (
-          activeView === 'login' ? (
-            <Login onViewChange={setActiveView} />
-          ) : (
-            <Register onViewChange={setActiveView} />
-          )
-        ) : user.role === 'hr' ? (
-          <HRDashboard />
-        ) : (
-          <EmployeeDashboard />
-        )}
-      </main>
+            {/* HR TABS */}
+            {activeTab === 'dashboard'     && isHR && <HRDashboardSummary />}
+            {activeTab === 'directory'     && isHR && <HREmployeeDirectory />}
+            {activeTab === 'hr-attendance' && isHR && <HRAttendanceDashboard />}
+            {activeTab === 'hr-leaves'     && isHR && <HRLeaveView />}
+            {activeTab === 'hr-payroll'    && isHR && <HRPayrollView />}
+          </main>
+        </div>
+      )}
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 px-6 py-4 bg-slate-950/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-          <p className="text-xs text-slate-600">
-            &copy; {new Date().getFullYear()} Dayflow HRM System. Built for Hackathon 2026.
-          </p>
-          <div className="flex space-x-4 text-xs font-mono text-slate-500">
-            <span>Stack: FastAPI + React + Tailwind v4</span>
+      <footer className="border-t border-slate-900 px-6 py-4 bg-slate-950/90 backdrop-blur-xl mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500">
+          <span>&copy; {new Date().getFullYear()} Dayflow HRMS. Built for Hackathon 2026.</span>
+          <div className="flex items-center gap-4 font-mono text-[11px]">
+            <span className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${apiStatus === 'online' ? 'bg-emerald-400' : apiStatus === 'offline' ? 'bg-rose-500' : 'bg-amber-400 animate-pulse'}`} />
+              API: <span className={apiStatus === 'online' ? 'text-emerald-400' : 'text-rose-400'}>{apiStatus}</span>
+            </span>
+            <span>React + Vite + FastAPI + PostgreSQL</span>
           </div>
         </div>
       </footer>
@@ -108,12 +130,115 @@ function AppContent() {
   );
 }
 
-function App() {
+// ── Inline mini dashboards (summary cards pulling from existing endpoints) ──
+
+function EmployeeDashboardSummary() {
+  const { employee, token } = useAuth();
+  const API_URL_LOCAL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL_LOCAL}/api/dashboard/employee`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {});
+  }, [token]);
+
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-100">
+          Welcome back, {employee?.name?.split(' ')[0] || 'there'} 👋
+        </h2>
+        <p className="text-xs text-slate-500 mt-1">Here's your overview for today</p>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Attendance Rate', value: data?.attendance?.attendance_rate || '—', color: 'text-indigo-400' },
+          { label: 'Hours This Week', value: data?.attendance?.total_hours_this_week ? `${data.attendance.total_hours_this_week}h` : '—', color: 'text-purple-400' },
+          { label: 'Leave Remaining', value: data?.leave?.casual_leave_remaining != null ? `${data.leave.casual_leave_remaining} days` : '—', color: 'text-emerald-400' },
+          { label: 'Net Salary', value: data?.payroll?.net_salary ? `$${data.payroll.net_salary.toLocaleString()}` : '—', color: 'text-amber-400' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">{label}</span>
+            <span className={`text-2xl font-bold font-mono block mt-2 ${color}`}>{value}</span>
+          </div>
+        ))}
+      </div>
+      {data?.recent_activity && (
+        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-5">
+          <h3 className="text-sm font-bold text-slate-200 mb-3">Recent Activity</h3>
+          <div className="space-y-2">
+            {data.recent_activity.map((a, i) => (
+              <div key={i} className="flex items-start gap-3 text-xs">
+                <span className="text-slate-500 font-mono w-40 shrink-0">{a.time}</span>
+                <span className="text-slate-300">{a.event}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-export default App;
+function HRDashboardSummary() {
+  const { token } = useAuth();
+  const API_URL_LOCAL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch(`${API_URL_LOCAL}/api/dashboard/hr`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {});
+  }, [token]);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-100">HR Dashboard 🏢</h2>
+        <p className="text-xs text-slate-500 mt-1">Organization-wide summary</p>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Employees', value: data?.stats?.total_employees ?? '—', color: 'text-indigo-400' },
+          { label: 'Attendance Today', value: data?.stats?.attendance_today || '—', color: 'text-emerald-400' },
+          { label: 'Pending Leaves', value: data?.stats?.pending_leaves ?? '—', color: 'text-amber-400' },
+          { label: 'Total Payroll', value: data?.stats?.total_payroll ? `$${Number(data.stats.total_payroll).toLocaleString()}` : '—', color: 'text-purple-400' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">{label}</span>
+            <span className={`text-2xl font-bold font-mono block mt-2 ${color}`}>{value}</span>
+          </div>
+        ))}
+      </div>
+      {data?.pending_leaves_list && (
+        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-5">
+          <h3 className="text-sm font-bold text-slate-200 mb-3">Pending Leave Requests</h3>
+          <div className="space-y-2">
+            {data.pending_leaves_list.map((l) => (
+              <div key={l.id} className="flex items-center justify-between text-xs bg-slate-950/50 rounded-xl px-4 py-3">
+                <div>
+                  <span className="font-semibold text-slate-200">{l.employee_name}</span>
+                  <span className="text-slate-500 ml-2">{l.type} · {l.duration}</span>
+                </div>
+                <span className="text-amber-400 font-mono font-bold">{l.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ToastProvider>
+  );
+}
