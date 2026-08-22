@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.core.database import get_db
-from app.api.auth import get_current_user, require_role
+from app.core.security import get_current_user, require_role
 from app.models.user import User
 from app.models.employee import Employee
 

@@ -1,77 +1,38 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-
 from app.core.database import get_db
-from app.core.security import hash_password, verify_password, create_access_token, decode_access_token
+from app.core.security import verify_password, hash_password, create_access_token, get_current_user
 from app.models.user import User
 from app.models.employee import Employee
+from app.schemas.auth import LoginRequest, TokenResponse, AuthMeResponse
 from app.schemas.user import UserCreate, UserResponse
+from app.schemas.employee import EmployeeResponse
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
-security = HTTPBearer()
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    role: str
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    """
-    Dependency that decodes the Bearer JWT token from the Authorization header
-    and retrieves the corresponding User from the database.
-    """
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired authentication token"
-        )
-    
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token payload is missing user identification"
-        )
-    
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authenticated user no longer exists"
-        )
-    return user
-
-def require_role(allowed_roles: list[str]):
-    """
-    Dependency generator to restrict access to endpoints based on user roles.
-    """
-    def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: insufficient permissions"
-            )
-        return current_user
-    return role_checker
+def _format_employee_response(emp: Employee | None) -> EmployeeResponse | None:
+    if not emp:
+        return None
+    return EmployeeResponse(
+        id=emp.id,
+        user_id=emp.user_id,
+        employee_id=emp.employee_id,
+        name=emp.name,
+        email=emp.email,
+        phone=emp.phone,
+        address=emp.address,
+        job_title=emp.job_title,
+        department=emp.department,
+        salary=emp.salary,
+        profile_picture=emp.profile_picture,
+        documents=emp.documents,
+        role=emp.user.role if emp.user else None
+    )
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    """
-    Registers a new User and creates a linked default Employee record if role is 'employee'.
-    """
-    # Normalize inputs
+    """Register a new user and automatically create a linked Employee profile if role is 'employee'."""
     email = user_in.email.strip().lower()
     role = user_in.role.strip().lower()
     
@@ -81,7 +42,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Invalid role. Must be 'employee' or 'hr'"
         )
 
-    # Check duplicate email
+    # Check for duplicate email
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(
@@ -96,17 +57,19 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         role=role
     )
     db.add(new_user)
-    db.flush()  # Populates new_user.id without committing yet
+    db.flush()  # Populates new_user.id for linking
 
     # Automatically provision default Employee record if it's an employee
     if role == "employee":
-        # Extract default name from email
         name = email.split("@")[0].title().replace(".", " ").replace("-", " ")
         new_employee = Employee(
             user_id=new_user.id,
             employee_id=f"EMP-{new_user.id:04d}",
             name=name,
-            email=email
+            email=email,
+            job_title="Software Developer",
+            department="Engineering",
+            salary=5000.0
         )
         db.add(new_employee)
 
@@ -115,36 +78,54 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 @router.post("/login", response_model=TokenResponse)
-def login(login_in: UserLogin, db: Session = Depends(get_db)):
-    """
-    Authenticates user credentials and returns a JWT token.
-    """
-    email = login_in.email.strip().lower()
-    user = db.query(User).filter(User.email == email).first()
-    
-    if not user or not verify_password(login_in.password, user.password_hash):
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    """Authenticate user with email and password, returning JWT access token."""
+    user = db.query(User).filter(User.email == login_data.email.strip().lower()).first()
+    if not user or not verify_password(login_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        
-    # Generate token with user claims
-    token_data = {
-        "sub": str(user.id),
-        "email": user.email,
-        "role": user.role
-    }
-    access_token = create_access_token(data=token_data)
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "role": user.role
-    }
 
-@router.get("/me", response_model=UserResponse)
+    # Generate JWT token with user id and role
+    access_token = create_access_token(data={"sub": str(user.id), "role": user.role, "email": user.email})
+
+    emp_data = _format_employee_response(user.employee)
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user),
+        employee=emp_data
+    )
+
+@router.post("/token", response_model=TokenResponse, include_in_schema=False)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """Swagger UI standard OAuth2 password flow endpoint."""
+    user = db.query(User).filter(User.email == form_data.username.strip().lower()).first()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = create_access_token(data={"sub": str(user.id), "role": user.role, "email": user.email})
+    emp_data = _format_employee_response(user.employee)
+
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user),
+        employee=emp_data
+    )
+
+@router.get("/me", response_model=AuthMeResponse)
 def get_me(current_user: User = Depends(get_current_user)):
-    """
-    Returns information about the currently authenticated user.
-    """
-    return current_user
+    """Get authenticated user and associated employee profile info."""
+    emp_data = _format_employee_response(current_user.employee)
+    return AuthMeResponse(
+        user=UserResponse.model_validate(current_user),
+        employee=emp_data
+    )
