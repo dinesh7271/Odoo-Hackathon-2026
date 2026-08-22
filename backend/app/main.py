@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine
 from app.models import Base
-from app.api import auth
+from app.api import auth, dashboard
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,6 +21,7 @@ app = FastAPI(
 
 # Include API routers
 app.include_router(auth.router)
+app.include_router(dashboard.router)
 
 # Enable CORS for frontend integration
 app.add_middleware(
