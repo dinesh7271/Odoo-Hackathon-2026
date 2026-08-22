@@ -20,5 +20,9 @@ class PayrollResponse(PayrollBase):
     id: int
     employee_id: str
     net_salary: float
+    employee_name: str | None = None
+    job_title: str | None = None
+    department: str | None = None
+    email: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

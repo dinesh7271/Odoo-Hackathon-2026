@@ -38,6 +38,10 @@ def get_my_payroll(current_user: User = Depends(get_employee_user), db: Session 
         db.commit()
         db.refresh(payroll)
         
+    payroll.employee_name = employee.name
+    payroll.job_title = employee.job_title
+    payroll.department = employee.department
+    payroll.email = employee.email
     return payroll
 
 @router.get("", response_model=list[PayrollResponse])
@@ -64,6 +68,11 @@ def get_all_payrolls(current_user: User = Depends(get_hr_user), db: Session = De
             db.add(payroll)
             db.commit()
             db.refresh(payroll)
+        
+        payroll.employee_name = emp.name
+        payroll.job_title = emp.job_title
+        payroll.department = emp.department
+        payroll.email = emp.email
         payrolls.append(payroll)
         
     return payrolls
@@ -118,4 +127,9 @@ def update_employee_salary(
     
     db.commit()
     db.refresh(payroll)
+    
+    payroll.employee_name = employee.name
+    payroll.job_title = employee.job_title
+    payroll.department = employee.department
+    payroll.email = employee.email
     return payroll
