@@ -56,8 +56,8 @@ function MainLayout() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-200">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-black text-2xl">D</span>
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse shadow-lg" style={{background:'linear-gradient(135deg,#B8860B,#8B6914)',boxShadow:'0 8px 32px #B8860B30'}}>
+            <span className="font-black text-2xl" style={{color:'#EEE5D3', fontFamily:'Playfair Display, serif'}}>D</span>
           </div>
           <p className="text-sm font-semibold text-slate-400">Authenticating Dayflow HRMS...</p>
         </div>
@@ -68,8 +68,8 @@ function MainLayout() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative selection:bg-indigo-500 selection:text-white">
       {/* Ambient background glows */}
-      <div className="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[140px] pointer-events-none" />
+      <div className="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none" style={{background:'radial-gradient(circle, #B8860B18 0%, transparent 70%)'}} />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none" style={{background:'radial-gradient(circle, #9E603018 0%, transparent 70%)'}} />
 
       {/* Navbar */}
       {isAuthenticated && <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />}
@@ -79,14 +79,14 @@ function MainLayout() {
         /* ── Logged-out: show auth modal ── */
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-xl mb-10">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold border mb-4" style={{background:'#B8860B15',color:'#D4A017',borderColor:'#B8860B30'}}>
               <span>Hackathon 2026</span><span>•</span><span>Dayflow HRMS</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-400 tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight" style={{fontFamily:'Playfair Display, serif', background:'linear-gradient(135deg,#EEE5D3 0%,#C4A882 50%,#A08060 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>
               Dayflow HRMS
             </h1>
             <p className="text-sm text-slate-400 mt-3">
-              Full-stack HR Management System — attendance, leaves, payroll & more.
+              Premium Human Resource Management — attendance, leaves, payroll &amp; more.
             </p>
           </div>
           <AuthModal />

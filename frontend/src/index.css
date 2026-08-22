@@ -1,6 +1,161 @@
 @import "tailwindcss";
 
-/* Custom fonts and scrollbars can be added here if needed */
-body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+/* ═══════════════════════════════════════════════════════════
+   DAYFLOW HRMS — Beige & Black Theme
+   All slate/indigo/purple tokens remapped to warm beige palette
+   ═══════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Slate → Warm Black & Beige ──────────────────────────
+     slate-950  →  deepest warm black     #0C0A07
+     slate-900  →  dark warm charcoal     #141109
+     slate-800  →  rich espresso          #1E1A12
+     slate-700  →  medium espresso        #28221A
+     slate-600  →  muted warm brown       #3D3529
+     slate-500  →  warm grey-brown        #6B5E4E
+     slate-400  →  muted beige-tan        #A08060
+     slate-300  →  warm tan               #C4A882
+     slate-200  →  soft beige             #DDD0BA
+     slate-100  →  light cream            #EEE5D3
+  ───────────────────────────────────────────────────────── */
+  --color-slate-950: #0C0A07;
+  --color-slate-900: #141109;
+  --color-slate-850: #1A1510;
+  --color-slate-800: #1E1A12;
+  --color-slate-700: #28221A;
+  --color-slate-600: #3D3529;
+  --color-slate-500: #6B5E4E;
+  --color-slate-400: #A08060;
+  --color-slate-300: #C4A882;
+  --color-slate-200: #DDD0BA;
+  --color-slate-100: #EEE5D3;
+
+  /* ── Indigo → Warm Gold / Amber accent ───────────────────
+     indigo-950 → very deep amber         #1A1205
+     indigo-600 → rich golden brown       #8B6914
+     indigo-500 → warm gold               #B8860B
+     indigo-400 → bright gold             #D4A017
+     indigo-300 → light gold              #E8C04A
+  ───────────────────────────────────────────────────────── */
+  --color-indigo-950: #1A1205;
+  --color-indigo-600: #8B6914;
+  --color-indigo-500: #B8860B;
+  --color-indigo-400: #D4A017;
+  --color-indigo-300: #E8C04A;
+
+  /* ── Purple → Deep Warm Sienna / Copper accent ───────────
+     purple-950 → very deep warm          #18100A
+     purple-600 → rich copper-brown       #7A4A1E
+     purple-500 → warm copper             #9E6030
+     purple-400 → muted copper            #C07840
+     purple-300 → light copper            #D4A06A
+     purple-200 → pale copper             #E8C89A
+  ───────────────────────────────────────────────────────── */
+  --color-purple-950: #18100A;
+  --color-purple-700: #6B3E18;
+  --color-purple-600: #7A4A1E;
+  --color-purple-500: #9E6030;
+  --color-purple-400: #C07840;
+  --color-purple-300: #D4A06A;
+  --color-purple-200: #E8C89A;
+
+  /* ── Pink → Warm Rose-Tan ────────────────────────────────*/
+  --color-pink-500: #C07060;
+
+  /* ── Emerald → Warm Olive Green (keep readable) ──────────*/
+  --color-emerald-500: #6B8C5A;
+  --color-emerald-400: #82A870;
+  --color-emerald-300: #A0C090;
+
+  /* ── Rose / Red (keep danger readable) ───────────────────*/
+  --color-rose-400: #C06850;
+  --color-rose-500: #A85040;
+
+  /* ── Amber / Gold passthrough ────────────────────────────*/
+  --color-amber-400: #D4A017;
+  --color-amber-500: #B8860B;
+}
+
+/* ── Global base styles ──────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #0C0A07;
+    color: #EEE5D3;
+    font-family: 'Inter', 'Georgia', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Scrollbar — warm beige on dark */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #141109;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3D3529;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6B5E4E;
+  }
+
+  /* Selection highlight — gold */
+  ::selection {
+    background: #B8860B40;
+    color: #EEE5D3;
+  }
+
+  /* Date/number inputs — warm styling */
+  input[type="date"],
+  input[type="number"] {
+    color-scheme: dark;
+  }
+}
+
+/* ── Component helpers ───────────────────────────────────── */
+@layer components {
+  /* Gradient text — beige to tan */
+  .text-gradient-beige {
+    background: linear-gradient(135deg, #EEE5D3 0%, #C4A882 50%, #A08060 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gold accent gradient */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #E8C04A 0%, #B8860B 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Card base */
+  .card-beige {
+    background: linear-gradient(135deg, #1E1A12 0%, #141109 100%);
+    border: 1px solid #28221A;
+    border-radius: 1.5rem;
+  }
+
+  /* Glow backdrop */
+  .glow-gold {
+    box-shadow: 0 0 80px 0 #B8860B18;
+  }
+}
+
+/* ── Animation helpers ───────────────────────────────────── */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 }

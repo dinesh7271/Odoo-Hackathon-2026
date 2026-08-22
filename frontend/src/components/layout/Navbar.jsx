@@ -28,20 +28,20 @@ export function Navbar({ activeTab, setActiveTab }) {
         
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
-            <span className="text-white font-black text-xl tracking-wider">D</span>
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ring-1" style={{background:'linear-gradient(135deg,#B8860B,#7A4A1E)',boxShadow:'0 4px 20px #B8860B25',ringColor:'#B8860B30'}}>
+            <span className="font-black text-xl" style={{color:'#EEE5D3',fontFamily:'Playfair Display,serif'}}>D</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+              <span className="font-extrabold text-xl tracking-tight" style={{fontFamily:'Playfair Display,serif',background:'linear-gradient(135deg,#EEE5D3,#C4A882)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>
                 Dayflow
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{background:'#B8860B15',color:'#D4A017',border:'1px solid #B8860B30'}}>
                 HRMS
               </span>
             </div>
             <span className="text-[11px] block font-medium text-slate-400">
-              Profile & Attendance Suite
+              Human Resource Management
             </span>
           </div>
         </div>
@@ -56,7 +56,7 @@ export function Navbar({ activeTab, setActiveTab }) {
             <span className="hidden sm:inline text-slate-400">Viewing as:</span>
             <span className="text-white font-bold">{employee?.name || user?.email}</span>
             <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-mono font-bold ${
-              isHR ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+              isHR ? 'text-amber-300 border border-amber-500/30 bg-amber-500/10' : 'text-emerald-300 border border-emerald-500/30 bg-emerald-500/10'
             }`}>
               {isHR ? 'HR Admin' : 'Employee'}
             </span>
@@ -91,8 +91,8 @@ export function Navbar({ activeTab, setActiveTab }) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-slate-100 truncate">{acc.name}</span>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-semibold ${
-                          acc.role === 'hr' ? 'bg-purple-500/20 text-purple-300' : 'bg-emerald-500/20 text-emerald-300'
+                        <span className={`px-1.5 py-0.2 rounded text-[9px] uppercase font-mono font-semibold ${
+                          acc.role === 'hr' ? 'text-amber-300 bg-amber-500/20' : 'text-emerald-300 bg-emerald-500/20'
                         }`}>
                           {acc.badge}
                         </span>

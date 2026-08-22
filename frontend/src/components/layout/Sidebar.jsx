@@ -68,11 +68,13 @@ export function Sidebar({ activeTab, setActiveTab }) {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-start gap-3.5 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-gradient-to-r from-indigo-600/30 to-purple-600/20 text-white border border-indigo-500/40 shadow-lg font-semibold'
+                      ? 'text-white border font-semibold'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                   }`}
+                  style={isActive ? {background:'linear-gradient(135deg,#B8860B25,#7A4A1E15)',borderColor:'#B8860B40',boxShadow:'0 4px 16px #B8860B15'} : {}}
                 >
-                  <div className={`p-1.5 rounded-xl shrink-0 mt-0.5 ${isActive ? 'bg-indigo-500 text-white shadow-md shadow-indigo-500/30' : 'bg-slate-800/80 text-slate-400'}`}>
+                  <div className={`p-1.5 rounded-xl shrink-0 mt-0.5`}
+                    style={isActive ? {background:'#B8860B',color:'#EEE5D3',boxShadow:'0 2px 8px #B8860B40'} : {background:'#1E1A1280',color:'#6B5E4E'}}>
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
