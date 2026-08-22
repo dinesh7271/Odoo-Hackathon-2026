@@ -1,209 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './components/common/Toast';
+import { Navbar } from './components/layout/Navbar';
+import { Sidebar } from './components/layout/Sidebar';
+import { EmployeeProfileView } from './components/profile/EmployeeProfileView';
+import { HREmployeeDirectory } from './components/profile/HREmployeeDirectory';
+import { Clock, Shield, Sparkles, User, Users, Calendar, ArrowRight } from 'lucide-react';
 
-function App() {
-  const [backendStatus, setBackendStatus] = useState('loading'); // 'loading' | 'reachable' | 'offline'
-  const [backendData, setBackendData] = useState(null);
-  const [latency, setLatency] = useState(null);
-  const [lastChecked, setLastChecked] = useState(null);
-  const [error, setError] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+function MainLayout() {
+  const { user, employee, isHR, isLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState('profile');
 
-  const checkHealth = async () => {
-    setIsRefreshing(true);
-    setBackendStatus('loading');
-    setError(null);
-    const startTime = performance.now();
-    
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
-
-      const response = await fetch(`${apiUrl}/api/health`, {
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const endTime = performance.now();
-      
-      setLatency(Math.round(endTime - startTime));
-      setBackendData(data);
-      setBackendStatus('reachable');
-    } catch (err) {
-      console.error('Backend health check failed:', err);
-      setError(err.name === 'AbortError' ? 'Connection timed out (3s)' : err.message || 'Failed to connect to backend server');
-      setBackendStatus('offline');
-      setBackendData(null);
-      setLatency(null);
-    } finally {
-      setLastChecked(new Date().toLocaleTimeString());
-      setTimeout(() => setIsRefreshing(false), 600); // Keep rotation smooth
-    }
-  };
-
-  useEffect(() => {
-    checkHealth();
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-200">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center animate-pulse shadow-lg shadow-indigo-500/30">
+            <span className="text-white font-black text-2xl">D</span>
+          </div>
+          <p className="text-sm font-semibold text-slate-400">Authenticating Dayflow HRMS Session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-hidden relative font-sans">
-      {/* Decorative ambient blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-fuchsia-500/10 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans relative selection:bg-indigo-500 selection:text-white">
+      {/* Decorative ambient background glows */}
+      <div className="fixed top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-purple-600/10 blur-[140px] pointer-events-none" />
+      <div className="fixed top-[40%] left-[30%] w-[400px] h-[400px] rounded-full bg-pink-600/5 blur-[160px] pointer-events-none" />
 
-      {/* Header */}
-      <header className="border-b border-slate-900 backdrop-blur-md bg-slate-950/50 sticky top-0 z-50 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <span className="text-white font-black text-xl">D</span>
-            </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Dayflow</span>
-              <span className="text-[10px] block font-mono text-slate-500 uppercase tracking-widest leading-none mt-0.5">HRM System</span>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              Hackathon Skeleton
-            </span>
-          </div>
-        </div>
-      </header>
+      {/* Top Navigation */}
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center p-6 z-10">
-        <div className="w-full max-w-xl">
-          {/* Dashboard Greeting Card */}
-          <div className="backdrop-blur-md bg-slate-900/40 border border-slate-900 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-slate-800">
-            <div className="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-            
-            <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 mb-2">
-              Welcome to Dayflow
-            </h1>
-            <p className="text-slate-400 text-sm md:text-base mb-8">
-              This is the initial React + FastAPI boilerplate for our Human Resource Management System. Check the backend connection status below.
-            </p>
+      {/* Main Container */}
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6 relative z-10">
+        
+        {/* Left Sidebar */}
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            {/* Health Status Block */}
-            <div className="bg-slate-950/60 rounded-2xl p-6 border border-slate-900/60 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center space-x-4">
-                  {/* Status Indicator Dot */}
-                  <div className="relative flex h-4 w-4">
-                    {backendStatus === 'loading' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    )}
-                    {backendStatus === 'reachable' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    )}
-                    {backendStatus === 'offline' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    )}
-                    <span className={`relative inline-flex rounded-full h-4 w-4 ${
-                      backendStatus === 'loading' ? 'bg-amber-500' :
-                      backendStatus === 'reachable' ? 'bg-emerald-500' : 'bg-rose-500'
-                    }`}></span>
+        {/* Main Content Area */}
+        <main className="flex-1 min-w-0">
+          
+          {/* Tab 1: My Profile */}
+          {activeTab === 'profile' && (
+            <EmployeeProfileView />
+          )}
+
+          {/* Tab 2: HR Employee Directory (HR Only) */}
+          {activeTab === 'directory' && isHR && (
+            <HREmployeeDirectory />
+          )}
+
+          {/* Tab 3: Attendance (Placeholder preview for Phase 3) */}
+          {(activeTab === 'attendance' || activeTab === 'hr-attendance') && (
+            <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-8 backdrop-blur-xl shadow-xl space-y-6">
+              <div className="flex items-center justify-between pb-6 border-b border-slate-800">
+                <div className="flex items-center gap-3.5">
+                  <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    <Clock className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-200">Backend Connection</h3>
-                    <p className="text-xs text-slate-500 font-mono">
-                      Last check: {lastChecked || 'Never'}
+                    <h2 className="text-xl font-bold text-white">
+                      {activeTab === 'hr-attendance' ? 'Company Attendance Management' : 'Attendance & Time Tracking'}
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Phase 1 backend endpoints are online. Phase 3 will launch the interactive check-in/out widgets.
                     </p>
                   </div>
                 </div>
-
-                <div>
-                  <button
-                    onClick={checkHealth}
-                    disabled={isRefreshing}
-                    className="cursor-pointer inline-flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl text-slate-200 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    <svg
-                      className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-400' : 'text-slate-400'}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2.5"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3"
-                      />
-                    </svg>
-                    <span>Check Status</span>
-                  </button>
-                </div>
+                <span className="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-mono font-bold">
+                  Phase 3 Target
+                </span>
               </div>
 
-              {/* Status details */}
-              <div className="mt-6 pt-6 border-t border-slate-900/60 grid grid-cols-2 gap-4">
-                <div className="bg-slate-900/30 p-4 rounded-xl border border-slate-900/40">
-                  <span className="text-[10px] font-mono text-slate-500 block uppercase tracking-wider mb-1">Status</span>
-                  <span className={`text-sm font-bold capitalize ${
-                    backendStatus === 'loading' ? 'text-amber-400' :
-                    backendStatus === 'reachable' ? 'text-emerald-400' : 'text-rose-400'
-                  }`}>
-                    {backendStatus}
+              {/* Status Preview Card */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 block">Today's Date</span>
+                  <span className="text-base font-bold text-white mt-1 block">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
-                <div className="bg-slate-900/30 p-4 rounded-xl border border-slate-900/40">
-                  <span className="text-[10px] font-mono text-slate-500 block uppercase tracking-wider mb-1">Latency</span>
-                  <span className="text-sm font-bold text-slate-200">
-                    {latency !== null ? `${latency} ms` : 'N/A'}
+                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 block">Supported Statuses</span>
+                  <span className="text-xs font-semibold text-emerald-400 mt-1 block">
+                    Present • Absent • Half-day • Leave
+                  </span>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
+                  <span className="text-[10px] font-mono uppercase text-slate-400 block">Backend APIs</span>
+                  <span className="text-xs font-mono text-indigo-300 mt-1 block">
+                    /api/attendance/check-in & /me
                   </span>
                 </div>
               </div>
 
-              {/* Diagnostic data / error */}
-              {backendStatus === 'reachable' && backendData && (
-                <div className="mt-4 bg-slate-900/20 p-4 rounded-xl border border-slate-900/30">
-                  <span className="text-[10px] font-mono text-slate-500 block uppercase tracking-wider mb-1.5">API Response Payload</span>
-                  <pre className="text-xs text-indigo-300 font-mono overflow-x-auto p-2 bg-slate-950/40 rounded border border-slate-900/60">
-                    {JSON.stringify(backendData, null, 2)}
-                  </pre>
-                </div>
-              )}
-
-              {backendStatus === 'offline' && (
-                <div className="mt-4 bg-rose-950/10 p-4 rounded-xl border border-rose-900/20">
-                  <span className="text-[10px] font-mono text-rose-500 block uppercase tracking-wider mb-1">Error Message</span>
-                  <p className="text-xs text-rose-400 font-mono">
-                    {error || 'Connection refused. Ensure backend is running.'}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-950/50 border border-indigo-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    Interactive Attendance UI in Phase 3
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Will feature live stopwatch clock-in/out button, weekly hours calendar, and HR daily aggregate metrics.
                   </p>
                 </div>
-              )}
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <span>View Profile First</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
+          )}
 
-            {/* Diagnostics instructions for hackathon setup */}
-            <div className="text-xs text-slate-500 leading-relaxed bg-slate-900/20 p-4 rounded-xl border border-slate-900/20">
-              <span className="font-semibold text-slate-400 block mb-1">Setup Instructions:</span>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>Run FastAPI backend inside <code className="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">backend/</code> using: <code className="text-slate-300">uvicorn app.main:app --reload --port 8000</code></li>
-                <li>Verify endpoint at <a href="http://localhost:8000/api/health" target="_blank" rel="noreferrer" className="text-indigo-400 underline hover:text-indigo-300">http://localhost:8000/api/health</a></li>
-                <li>Or simply run the entire stack via <code className="text-slate-300">docker-compose up --build</code></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 px-6 py-4 bg-slate-950/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
-          <p className="text-xs text-slate-600">
-            &copy; {new Date().getFullYear()} Dayflow HRM System. Built for Hackathon 2026.
-          </p>
-          <div className="flex space-x-4 text-xs font-mono text-slate-500">
-            <span>Stack: FastAPI + React + Tailwind v4</span>
+      <footer className="border-t border-slate-900 px-6 py-4 bg-slate-950/90 backdrop-blur-xl mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500">
+          <span>&copy; {new Date().getFullYear()} Dayflow HRMS. Built with React + Vite + Tailwind + FastAPI.</span>
+          <div className="flex items-center gap-4 font-mono text-[11px]">
+            <span>FastAPI: <span className="text-emerald-400 font-semibold">Active</span></span>
+            <span>JWT Auth: <span className="text-indigo-400 font-semibold">Protected</span></span>
+            <span>Phase 2: <span className="text-purple-400 font-semibold">Profile Complete</span></span>
           </div>
         </div>
       </footer>
@@ -211,4 +136,12 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ToastProvider>
+  );
+}
