@@ -5,9 +5,11 @@ import { EmployeeLeaveView } from './components/EmployeeLeaveView';
 import { AuthModal } from './components/AuthModal';
 import { IconShield, IconUser, IconCalendar } from './components/Icons';
 
+import { HRLeaveView } from './components/HRLeaveView';
+
 function AppContent() {
   const { isAuthenticated, role, user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('employee'); // 'employee' | 'hr'
+  const [activeTab, setActiveTab] = useState(() => (role === 'hr' ? 'hr' : 'employee'));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-x-hidden relative font-sans">
@@ -43,23 +45,7 @@ function AppContent() {
             {activeTab === 'employee' ? (
               <EmployeeLeaveView />
             ) : (
-              /* Temporary HR placeholder for Phase 2 before Phase 3 full portal */
-              <div className="bg-slate-900/50 border border-purple-500/30 rounded-3xl p-8 text-center backdrop-blur-md">
-                <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mx-auto mb-4">
-                  <IconShield className="w-7 h-7" />
-                </div>
-                <h2 className="text-2xl font-bold text-slate-100">HR Admin Portal</h2>
-                <p className="text-sm text-slate-400 max-w-md mx-auto mt-2 mb-6">
-                  You are viewing as <span className="text-purple-400 font-mono font-bold">{user?.email}</span>. Switch back to Employee Portal to submit leave requests, or proceed to Phase 3 for the complete HR Approval Suite.
-                </p>
-                <button
-                  onClick={() => setActiveTab('employee')}
-                  className="cursor-pointer inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition"
-                >
-                  <IconUser className="w-4 h-4" />
-                  <span>Go to Employee Leave Portal</span>
-                </button>
-              </div>
+              <HRLeaveView />
             )}
           </div>
         )}
